@@ -1,0 +1,10 @@
+p <- 'four_cohort_trajectory_rcs'
+z <- read.csv(file.path(p,'cohort_wave_prevalence.csv'))
+stopifnot(nrow(z)==24L,sum(z$cohort=='MCS')==9L)
+s <- read.csv(file.path(p,'MCS_group_trajectory_class_summary.csv'))
+stopifnot(sum(s$children)==10768L)
+m <- read.csv(file.path(p,'MCS_age_BMI_RCS_model_summary.csv'))
+stopifnot(m$n[2]==50565L,m$children[2]==16991L)
+files <- list.files(p,full.names=TRUE)
+stopifnot(length(files)==26L,all(file.size(files)>0))
+cat('Validated',length(files),'output files,',nrow(z),'wave rows,',sum(s$children),'trajectory children.\n')

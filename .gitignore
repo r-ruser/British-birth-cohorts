@@ -1,0 +1,6 @@
+/*
+!/.gitignore
+!/README.md
+!/R/
+/R/*
+!/R/*.R
