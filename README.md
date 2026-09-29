@@ -12,6 +12,8 @@ This repository contains the R scripts used for the local analyses of NCDS, BCS7
 - `parent_behavior_*`, `plot_parent_behavior.R`: parent-behaviour harmonisation and association models.
 - `v2_*`: transition and adult repeated-burden models with weighting and checks.
 - `v3_child_audit.R`, `v3_models.R`, `v3_mi.R`, `v3_finalize_pool.R`, `v3_quality.R`, `v3_figures.R`: childhood phenotype, adult burden, equivalence, stage interaction, marginal risk, MI + IPCW, and figures.
+- `analysis_severe_asthma_relevant.R`, `plot_severe_asthma_relevant.R`: high-symptom, hospitalisation and lung-function analyses and their source figures.
+- `render_manuscript_figures.R`: manuscript Figures 1–4, including newly calculated stage-specific confidence intervals and composite Figures 3–4.
 
 ## Reproducing the analysis
 

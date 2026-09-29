@@ -1,0 +1,33 @@
+options(stringsAsFactors=FALSE)
+suppressPackageStartupMessages({library(ggplot2);library(patchwork)})
+out<-'E:/cohort_rds_stage_20260925/severe_asthma_relevant_analysis_20260928'
+read<-function(name)read.csv(file.path(out,name))
+theme_set(theme_classic(base_size=9,base_family='Arial')+theme(strip.background=element_blank(),strip.text=element_text(face='bold'),plot.title=element_text(size=10,face='bold'),plot.subtitle=element_text(size=8),legend.position='bottom',plot.caption=element_text(size=7,hjust=0)))
+savep<-function(p,name,width=183,height=120){w<-width/25.4;h<-height/25.4;for(ext in c('png','pdf','svg')){a<-list(filename=file.path(out,paste0(name,'.',ext)),plot=p,width=w,height=h,bg='white');if(ext=='png'){a$device<-ragg::agg_png;a$dpi<-400};if(ext=='pdf')a$device<-cairo_pdf;if(ext=='svg')a$device<-svglite::svglite;do.call(ggsave,a)}}
+
+c<-read('02_MCS_severe_wheeze_counts.csv');q<-c[c$component%in%c('recent_wheeze','severe_wheeze_proxy','asthma_background_severe'),]
+q$risk<-q$positive/q$evaluable
+q$label_vjust<-ifelse(q$component=='asthma_background_severe',1.6,-.8)
+q$component<-factor(q$component,levels=c('recent_wheeze','severe_wheeze_proxy','asthma_background_severe'),labels=c('Recent wheeze','Severe-wheeze symptom proxy','Asthma-background severe-wheeze proxy'))
+q$nlabel<-paste0(q$positive,'/',q$evaluable)
+p<-ggplot(q,aes(age,risk,color=component,group=component))+geom_line(linewidth=.55)+geom_point(size=2)+geom_text(aes(label=nlabel,vjust=label_vjust),size=2.5,show.legend=FALSE)+scale_x_continuous(breaks=c(3,5,7,11))+scale_y_continuous(labels=scales::label_percent(),limits=c(0,.25))+scale_color_manual(values=c('#99A7B0','#557D9E','#B2816B'))+labs(x='Age (years)',y='Observed proportion among evaluable children',color=NULL,title='MCS symptom-burden proxies at each childhood survey',subtitle='Unique-child counts; descriptive unweighted proportions',caption='Labels: positive/evaluable children. Different missingness and survey routes give different denominators.\nSource: 02_MCS_severe_wheeze_counts.csv; symptoms do not define clinical severe asthma.')
+savep(p,'Figure_S1_MCS_severe_wheeze_by_age',183,125)
+
+ar<-read('MCS_prior_history_standardized_risks.csv');ar$prior_group<-factor(ar$prior_group,levels=c('never','isolated','repeated'),labels=c('0 prior positive waves','1 prior positive wave','>=2 prior positive waves'))
+rr<-read('04_childhood_burden_to_severe_wheeze.csv');rr<-rr[rr$term=='repeated_vs_isolated',]
+p<-ggplot(ar,aes(prior_group,adjusted_risk))+geom_errorbar(aes(ymin=lower,ymax=upper),width=.12,linewidth=.5,color='#557D9E')+geom_point(size=3,color='#557D9E')+scale_y_continuous(labels=scales::label_percent())+labs(x='Recent wheeze history at ages 3, 5 and 7',y='Standardized age-11 proxy risk (95% CI)',title='Prior repeated wheeze and subsequent high symptom burden',subtitle=sprintf('Repeated vs isolated: adjusted RR %.2f (95%% CI %.2f-%.2f); n = %s',rr$estimate,rr$lower,rr$upper,format(rr$n,big.mark=',')),caption='Adjusted for seven early-life factors; age-11 survey weights x history-completeness IPW.\nConditional delta-method CI. Source: 04_childhood_burden_to_severe_wheeze.csv and standardized-risk table.')
+savep(p,'Figure_S2_childhood_burden_to_severe_wheeze',183,110)
+
+h<-read('05_hospitalisation_analysis.csv');q<-h[h$cohort=='NCDS',];ci<-t(vapply(seq_len(nrow(q)),function(i)binom.test(q$events[i],q$n[i])$conf.int,numeric(2)));q$lower<-ci[,1];q$upper<-ci[,2];q$exposure<-factor(q$exposure,levels=c('never','isolated','repeated'),labels=c('0 positive windows','1 positive window','2 positive windows'))
+p1<-ggplot(q,aes(exposure,crude_risk))+geom_errorbar(aes(ymin=lower,ymax=upper),width=.1,color='#557D9E')+geom_point(size=2.5,color='#557D9E')+geom_text(aes(label=paste0(events,'/',n)),vjust=-1,size=2.8)+scale_y_continuous(labels=scales::label_percent())+labs(x='Childhood age-11/16 wheeze',y='Conditional observed proportion (exact 95% CI)',title='NCDS age-33 admission reports',subtitle='Only the answered questionnaire route; 21 events')
+fl<-read('10_sample_flow.csv');q<-fl[fl$cohort=='BCS70'&fl$analysis=='hospital',];q$stage<-factor(q$stage,levels=c('age10_positive','age16_attack_positive','age16_since10_positive'),labels=c('Age 10: wheeze admission','Age 16: wheeze-attack history','Age 16: admission since 10'))
+p2<-ggplot(q,aes(stage,n))+geom_col(fill='#A5B5BF',width=.6)+geom_text(aes(label=n),vjust=-.5,size=3)+coord_cartesian(ylim=c(0,max(q$n)*1.15))+labs(x=NULL,y='Positive records',title='BCS70 historical admission markers',subtitle='V3-linked cohort; no negative denominator')+theme(axis.text.x=element_text(angle=20,hjust=1))
+p<-p1+p2+plot_annotation(caption='Descriptive secondary evidence: time windows and ascertainment differ. BCS70 blank/no-response codes remain unknown.\nNo multivariable hospitalisation model is reported. Source: 05_hospitalisation_analysis.csv and 10_sample_flow.csv.')
+savep(p,'Figure_S3_childhood_burden_hospitalisation',183,120)
+
+lf<-read('07_NCDS_lung_function_models.csv');q<-lf[lf$endpoint%in%c('FEV1_L','ratio'),];q$endpoint<-factor(q$endpoint,levels=c('FEV1_L','ratio'),labels=c('FEV1 difference (L)','FEV1/FVC difference'))
+q$term<-factor(q$term,levels=c('repeated_vs_isolated','child_grouprepeated','child_groupisolated'),labels=c('Repeated vs isolated','Repeated vs never','Isolated vs never'))
+p<-ggplot(q,aes(estimate,term))+geom_vline(xintercept=0,lty=2,color='grey65')+geom_errorbar(aes(xmin=lower,xmax=upper),orientation='y',width=.12,color='#557D9E')+geom_point(size=2.5,color='#557D9E')+facet_wrap(~endpoint,scales='free_x')+labs(x='Adjusted difference (HC3 robust 95% CI)',y=NULL,title='Childhood symptoms and midlife physiological respiratory burden',subtitle=paste0('NCDS ages 44-46; strict spirometry QC; adjusted n = ',format(unique(q$n),big.mark=',')),caption='Adjusted for sex, height, age, smoking, early SES, birthweight and prenatal smoking; BH q values are in the source table.\nPhysiological associations, not asthma diagnoses. Source: 07_NCDS_lung_function_models.csv.')
+savep(p,'Figure_S4_childhood_burden_lung_function',183,105)
+writeLines(c('Four R-generated quantitative figures; PNG 400dpi, PDF, editable SVG.', 'S1 descriptive proportions: no model CI; labels show unique-child positive/evaluable counts.', 'S2 model-conditional delta-method CI under observed weighted covariate standardization.', 'S3 NCDS exact binomial CI within routed sample; BCS70 positive counts only.', 'S4 HC3 robust coefficient CI; repeated-versus-isolated direct contrast included.'),file.path(out,'figure_contract.txt'))
+cat('Four figure triplets exported\n')
