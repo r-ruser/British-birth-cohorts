@@ -8,6 +8,8 @@ This repository contains the R scripts used for the local analyses of NCDS, BCS7
 
 - `build_full_cohort_rds.R`, `audit_*`, `inspect_*`, `trajectory_*`: source construction and variable audits.
 - `augment_bcs70_full_rds.R`: audited addition of the UKDA 2699 age-5 and UKDA 9347 age-51 files to the existing BCS70 full RDS, with a preserved backup.
+- `analysis_bcs70_age5_age51.R`: BCS70 age-5 early wheeze and age-51 adult report extension, including inverse-probability-of-observation weighting, six-versus-seven-wave comparison, and sample-flow diagnostics.
+- `render_updated_figure3.R`: redraw Figure 3 with the BCS70 adult follow-up extended through age 51.
 - `four_cohort_trajectory_rcs.R`, `mcs_*`, `plot_four_cohort_rcs.R`, `plot_mcs_groups.R`: exploratory trajectories and restricted cubic splines.
 - `formal_*`, `plot_formal_results.R`: formal MCS, adult-cohort, and Next Steps analyses.
 - `parent_behavior_*`, `plot_parent_behavior.R`: parent-behaviour harmonisation and association models.
